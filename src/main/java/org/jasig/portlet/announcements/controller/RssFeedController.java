@@ -67,6 +67,7 @@ public class RssFeedController extends AbstractController {
 		response.setContentType(CONTENT_TYPE);
 		
 		Long topicId;
+		Integer abstractEn;
 		try {
 			topicId = Long.valueOf( ServletRequestUtils.getIntParameter(request, "topic") );
 			if (topicId == null) {
@@ -76,7 +77,16 @@ public class RssFeedController extends AbstractController {
 			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Must specify topic id");
 			return null;
 		}
-		
+		try {
+			abstractEn = Integer.valueOf( ServletRequestUtils.getIntParameter(request, "abs") );
+			if (abstractEn == null) {
+				abstractEn = 0;
+			}
+		} catch (Exception e) {
+			abstractEn = 0;
+                }
+
+			
 		Topic t = null;
 		try {
 			t = announcementService.getTopic(topicId);
@@ -115,12 +125,17 @@ public class RssFeedController extends AbstractController {
 			entry = new SyndEntryImpl();
 			entry.setTitle(a.getTitle());
 			entry.setAuthor(a.getAuthor());
+			entry.setUri(a.getId().toString());
 			if (a.getLink() != null)
 				entry.setLink(a.getLink());
 			entry.setPublishedDate(a.getStartDisplay());
 			description = new SyndContentImpl();
 			description.setType("text/plain");
-			description.setValue(a.getMessage());
+			if (abstractEn == 0) {
+				description.setValue(a.getMessage());
+			} else {
+				description.setValue(a.getAbstractText());
+			}
 			entry.setDescription(description);
 			entries.add(entry);
 		}
